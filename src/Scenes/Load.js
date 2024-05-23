@@ -11,9 +11,15 @@ class Load extends Phaser.Scene {
 
     // Load tilemap information
     this.load.image("tilemap_tiles", "tilemap_packed.png");                         // Packed tilemap
-    this.load.spritesheet("sprite_tiles", "tilemap_packed.png", {frameWidth: 18, frameHeight: 18});
+    this.load.image("tilemap-backgrounds", "tilemap-backgrounds_packed.png");                         // Packed tilemap
+    this.load.image("tilemap-food", "tilemap_packed_food.png");                         // Packed tilemap
+    this.load.spritesheet("sprite_tiles", "tilemap_packed.png", { frameWidth: 18, frameHeight: 18 });
+    this.load.spritesheet("sprite_tiles_food", "tilemap_packed_food.png", { frameWidth: 18, frameHeight: 18 });
 
     this.load.tilemapTiledJSON("platformer-level-1", "platformer-level-1.tmj");   // Tilemap in JSON
+    this.load.tilemapTiledJSON("platformer-level-2", "3adesign.tmj");   // Tilemap in JSON
+    this.load.tilemapTiledJSON("platformer-level-3", "3adesign1.tmj");   // Tilemap in JSON
+
   }
 
   create() {
@@ -46,6 +52,65 @@ class Load extends Phaser.Scene {
         { frame: "tile_0001.png" }
       ],
     });
+
+    this.anims.create({
+      key: 'flies',
+      frames: this.anims.generateFrameNames('platformer_characters', {
+        prefix: "tile_",
+        start: 24,
+        end: 26,
+        suffix: ".png",
+        zeroPad: 4
+      }),
+      frameRate: 10,
+      repeat: -1
+    });
+
+    this.anims.create({
+      key: 'bigBlueSquare',
+      frames: this.anims.generateFrameNames('platformer_characters', {
+        prefix: "tile_",
+        start: 21,
+        end: 23,
+        suffix: ".png",
+        zeroPad: 4
+      }),
+      frameRate: 6,
+      repeat: -1
+    })
+
+    this.anims.create({
+      key: 'littleBlueSquare',
+      frames: this.anims.generateFrameNames('platformer_characters', {
+        prefix: "tile_",
+        start: 18,
+        end: 20,
+        suffix: ".png",
+        zeroPad: 4
+      }),
+      frameRate: 6,
+      repeat: -1
+    })
+
+    this.anims.create({
+      key: 'face',
+      frames: this.anims.generateFrameNames('platformer_characters', {
+        prefix: "tile_",
+        start: 11,
+        end: 12,
+        suffix: ".png",
+        zeroPad: 4
+      }),
+      frameRate: 1,
+      repeat: -1
+    })
+
+    this.anims.create({
+      key: 'bounce',
+      frames: this.anims.generateFrameNumbers("sprite_tiles", { start: 107, end: 108 }),
+      frameRate: 1,
+      repeat: -1
+    })
 
     // ...and pass to the next Scene
     this.scene.start("platformerScene");

@@ -1,89 +1,7 @@
-/**
- *
- * @param {Phaser.Tilemaps.TilemapLayer} layer
- * @param {*} x
- * @param {*} y
- */
-const removeTile = (layer, x, y) => {
-  const tile = layer.getTileAt(x, y)
-  const worldX = tile.getCenterX()
-  const worldY = tile.getCenterY()
-  layer.removeTileAt(x, y)
-  return [worldX, worldY]
-}
-/**
- *
- * @param {Phaser.Scene} scene
- * @param {number} row
- * @param {number} col
- */
-const createFlies = (scene, row, col) => {
-  const tileLen = 18;
-  const scale = 2
-  const x = col * tileLen;
-  const y = row * tileLen;
-  const sprite = scene.physics.add.sprite(x, y, 'platformer_characters', 'tile_0024.png');
-  sprite.body.allowGravity = false;
-  sprite.anims.play("flies", true);
-  sprite.setScale(scale);
-  return sprite;
 
-}
-/**
- *
- * @param {Phaser.Scene} scene
- * @param {number} tileIndex
- * @returns
- */
-const createSprite = (scene, tileIndex, x, y) => {
-
-  const sprite = scene.physics.add.sprite(x, y, 'sprite_tiles', tileIndex)
-  sprite.setScale(2);
-
-  return sprite;
-}
-
-/**
- *
- * @param {Phaser.Scene} scene
- * @param {Phaser.GameObjects.Sprite} player
- * @param {number} x
- * @param {number} y
- */
-const createFloorGroup = (scene, player, x, y) => {
-  const sprite1 = createSprite(scene, 48, x, y)
-  const sprite2 = createSprite(scene, 49, x + 18 * 2, y)
-  const sprite3 = createSprite(scene, 50, x + 18 * 4, y)
-
-  const group = scene.physics.add.group();
-  group.add(sprite1);
-  group.add(sprite2);
-  group.add(sprite3);
-
-
-  group.children.iterate(child => {
-    child.body.allowGravity = false
-    child.setImmovable(true)
-    scene.physics.add.collider(child, player)
-    scene.physics.add.existing(child, true);
-  });
-
-  scene.tweens.add({
-    targets: group.getChildren(),
-    x: '+=200',
-    ease: 'Linear',
-    duration: 1000,
-    yoyo: true,
-    repeat: -1
-  });
-
-  return group;
-
-};
-
-class Platformer extends Phaser.Scene {
+class Platformer2 extends Phaser.Scene {
   constructor() {
-    super("platformerScene");
+    super("platformerScene2");
   }
 
   init() {
@@ -97,43 +15,45 @@ class Platformer extends Phaser.Scene {
   create() {
     // Create a new tilemap game object which uses 18x18 pixel tiles, and is
     // 45 tiles wide and 25 tiles tall.
-    this.map = this.add.tilemap("platformer-level-1", 18, 18, 45, 25);
+    this.map = this.add.tilemap("platformer-level-2", 18, 18, 45, 25);
 
     // Add a tileset to the map
     // First parameter: name we gave the tileset in Tiled
     // Second parameter: key for the tilesheet (from this.load.image in Load.js)
-    this.tileset = this.map.addTilesetImage("kenny_tilemap_packed", "tilemap_tiles");
+    this.tileset = this.map.addTilesetImage("3adesign", "tilemap_tiles");
+    this.tilesetBg = this.map.addTilesetImage("tilemap-backgrounds", "tilemap-backgrounds")
 
     // Create a layer
-    this.groundLayer = this.map.createLayer("Ground-n-Platforms", this.tileset, 0, 0);
-    this.background = this.map.createLayer("Background", this.tileset, 0, 0);
+    this.background = this.map.createLayer("Tile Layer 4", this.tilesetBg, 0, 0);
+    this.background2 = this.map.createLayer("back", this.tileset, 0, 0);
+    this.groundLayer = this.map.createLayer("Tile Layer 1", this.tileset, 0, 0);
 
     this.groundLayer.setScale(2.0);
     this.groundLayer.setDepth(1);
     this.background.setScale(2.0);
     this.background.setDepth(0);
+    this.background2.setScale(2.0);
+    this.background2.setDepth(1);
+
+
 
     // Make it collidable
     this.groundLayer.setCollisionByProperty({
       collides: true
     });
-    // const spriteGroup = this.physics.add.group()
-
-    // const tile = this.groundLayer.getTileAt(14, 10)
-    // console.log(tile, tile.index)
-    // const sprite = this.physics.add.sprite(100, 100, 'sprite_tiles', 49)
-    // sprite.setScale(2)
-    // sprite.body.allowGravity = false
+    this.background2.setCollisionByProperty({
+      collides: true
+    })
 
 
-    // set up player avatar
-    // my.sprite.player = this.physics.add.sprite(game.config.width / 4, game.config.height / 2, "platformer_characters", "tile_0000.png").setScale(SCALE)
-    my.sprite.player = this.physics.add.sprite(game.config.width / 4, game.config.height / 10, "platformer_characters", "tile_0000.png").setScale(SCALE)
+    my.sprite.player = this.physics.add.sprite(game.config.width / 10, game.config.height / 10, "platformer_characters", "tile_0000.png").setScale(SCALE)
     my.sprite.player.setCollideWorldBounds(true);
     my.sprite.player.setDepth(9)
 
     // Enable collision handling
     this.physics.add.collider(my.sprite.player, this.groundLayer);
+    this.physics.add.collider(my.sprite.player, this.background2);
+
     // bound player on horizontal direction
 
     this.physics.world.setBounds(0, 0, 1440, this.sys.game.config.height, true, true, false, false)
@@ -158,101 +78,132 @@ class Platformer extends Phaser.Scene {
       this.physics.world.drawDebug = this.physics.world.drawDebug ? false : true
       this.physics.world.debugGraphic.clear()
     }, this);
+
     this.jumpCount = 0
 
-
-    let worldX = 0
-    let worldY = 0
-    const oldGroup = [
-      [14, 10],
-      [15, 10],
-      [16, 10],
-    ]
-    oldGroup.forEach((pos) => {
-      const x = pos[0]
-      const y = pos[1]
-      const worldPos = removeTile(this.groundLayer, x, y)
-      if (!worldX && !worldY) {
-        worldX = worldPos[0]
-        worldY = worldPos[1]
-      }
-    })
-    createFloorGroup(this, my.sprite.player, worldX, worldY)
+    const replaceTile = (pos, index) => {
+      const [x, y] = pos
+      const [worldX, worldY] = removeTile(this.groundLayer, x, y)
+      const sprite = createSprite(this, index, worldX, worldY)
+      return sprite
+    }
 
     this.enemies = [];
 
-    this.enemies.push(createFlies(this, 25, 50));
-    this.enemies.push(createFlies(this, 15, 65));
-    // replace duck tile with sprite
-    [[16, 17], [24, 17]].forEach((pos) => {
-      const [x, y] = pos;
-      const [worldX, worldY] = removeTile(this.groundLayer, x, y);
-      const duck = createSprite(this, 145, worldX, worldY);
-      this.physics.add.collider(duck, this.groundLayer);
+    this.enemies.push(createFlies(this, 6 * 2, 22 * 2));
+    this.enemies.push(createFlies(this, 14 * 2, 17 * 2));
+
+    const bigSquare = this.physics.add.sprite(9 * 18 * 2, 15 * 18 * 2, 'platformer_characters', 'tile_0021.png').setScale(2)
+    bigSquare.anims.play('bigBlueSquare');
+    this.physics.add.collider(bigSquare, this.groundLayer)
+
+    const replaceEnemy = (index) => (pos) => {
+      const sprite = replaceTile(pos, index)
+      sprite.body.allowGravity = false
+      this.enemies.push(sprite)
+      return sprite
+    };
+
+
+    [[5, 12], [6, 12], [7, 12]].forEach(replaceEnemy(13));
+
+    // [[18, 17], [23, 17]].forEach(replaceEnemy(127));
+    [[18, 8], [30, 2]].forEach((pos) => {
+      const sprite = replaceEnemy(68)(pos)
       this.tweens.add({
-        targets: [duck],
-        x: '-=50',
+        targets: [sprite],
+        y: '+=36',
         ease: 'Linear',
         duration: 1000,
         yoyo: true,
-        repeat: -1,
-        delay: Math.random() * 2000
+        repeat: -1
       });
-      this.enemies.push(duck);
+
+
+    });
+    [[9, 3], [9, 4], [9, 5]].forEach((pos) => {
+      const sprite = replaceEnemy(68)(pos);
+      sprite.setRotation(Math.PI / 2)
+      sprite.setDepth(0)
+    });
+    [[32, 17], [29, 17]].forEach((pos) => {
+      const [x, y] = pos;
+      const tile = this.groundLayer.getTileAt(x, y);
+      const worldX = tile.getCenterX();
+      const worldY = tile.getCenterY();
+
+      const sprite = this.physics.add.sprite(worldX, worldY, "platformer_characters", "tile_0011.png").setScale(2);
+      sprite.setDepth(2);
+      sprite.body.allowGravity = false
+      sprite.anims.play('face');
     });
 
-    const bigSquare = this.physics.add.sprite(7 * 18 * 2, 2 * 18 * 2, 'platformer_characters', 'tile_0021.png').setScale(2)
-    bigSquare.anims.play('bigBlueSquare');
-    this.physics.add.collider(bigSquare, this.groundLayer)
-    const littleSquare = this.physics.add.sprite(6 * 18 * 2, 12 * 18 * 2, 'platformer_characters', 'tile_0018.png').setScale(2)
-    littleSquare.anims.play('littleBlueSquare');
-    this.physics.add.collider(littleSquare, this.groundLayer)
+    [[36, 17]].forEach((pos) => {
+      const [x, y] = pos;
+      const tile = this.background.getTileAt(x, y);
+      const worldX = tile.getCenterX();
+      const worldY = tile.getCenterY();
 
-    this.enemies.push(bigSquare)
-    this.enemies.push(littleSquare)
+      const sprite = this.physics.add.sprite(worldX, worldY, "platformer_characters", "tile_0008.png").setScale(2);
+      sprite.setDepth(2);
+      sprite.body.allowGravity = false;
+    });
+
+
+    const bounce = replaceTile([2, 18], 107);
+    bounce.body.allowGravity = false;
+    bounce.setImmovable(true);
+    bounce.pushed = false;
+    this.bounce = bounce;
+    bounce.anims.play("bounce");
+
+    bounce.anims.stop();
+    bounce.setFrame(108);
+    this.physics.add.collider(my.sprite.player, bounce, (player, sprite) => {
+      if (!bounce.pushed) {
+        bounce.pushed = true
+        bounce.setFrame(107);
+      }
+      bounce.collideWithPlayer = true
+    });
 
     this.enemies.forEach((enemy) => {
       this.physics.add.overlap(enemy, my.sprite.player, this.shouldFailed.bind(this))
     });
 
-    const collectables = [];
+
+    const collectables = []
+    this.collectables = collectables
+
     const createCollectable = (pos, index, type) => {
-      const [x, y] = pos
-      const [worldX, worldY] = removeTile(this.groundLayer, x, y)
-      const sprite = createSprite(this, index, worldX, worldY)
-      sprite.customType = type
-      sprite.body.allowGravity = false
-      collectables.push(sprite)
+      const sprite = replaceTile(pos, index);
+      sprite.customType = type;
+      sprite.body.allowGravity = false;
+      collectables.push(sprite);
     }
     // replace key tile with sprite
-    [[3, 1], [4, 16], [34, 11]].forEach((pos) => {
+    [[22, 4], [38, 2], [6, 11]].forEach((pos) => {
       createCollectable(pos, 27, 'keys')
     });
-
-    // replace diamond tile with sprite.
-    // diamond can prevent player from enemies damage
-    [[35, 2]].forEach((pos) => {
+    [[3, 1], [20, 17]].forEach((pos) => {
       createCollectable(pos, 67, 'diamonds')
     });
-
-    [[38, 18]].forEach((pos) => {
+    [[32, 6], [25, 13]].forEach((pos) => {
       createCollectable(pos, 44, 'heart')
     });
+
 
     collectables.forEach((c) => {
       this.physics.add.overlap(c, my.sprite.player, this.collect.bind(this))
     });
-    this.collectables = collectables;
 
-    // Next level needs player to collect 3 keys
-    [[39, 16], [39, 17], [39, 18]].forEach((pos) => {
+    [[0, 18], [0, 17], [0, 16]].forEach((pos) => {
       const [x, y] = pos
       const [worldX, worldY] = removeTile(this.groundLayer, x, y)
       const lock = createSprite(this, 28, worldX, worldY)
       lock.body.allowGravity = false
       this.physics.add.overlap(lock, my.sprite.player, this.canPass.bind(this))
     });
-
 
     this.health = this.add.group().setDepth(10);
 
@@ -285,21 +236,25 @@ class Platformer extends Phaser.Scene {
 
   canPass() {
     if (this.collection.keys > 2) {
-      this.scene.start("platformerScene2")
+      this.scene.start("platformerScene3")
     }
   }
   shouldFailed() {
     if (this.collection['diamonds'] > 0) {
       return
     }
-
     if (this.collection.heart > 0) {
       this.collection.heart--;
+      this.scene.pause();
+      setTimeout(() => {
+        this.scene.start('platformerScene2');
+      }, 1000);
+      return
     }
     this.failed()
   }
-
   failed() {
+    if (this.scene.isPaused()) return;
     this.scene.pause()
     setTimeout(() => {
       this.scene.start('platformerScene');
@@ -308,23 +263,23 @@ class Platformer extends Phaser.Scene {
 
   updateHealth() {
     const hearts = this.collection.heart || 0
+    this.health.clear();
     for (let i = 0; i < hearts; i++) {
       const sprite = this.add.sprite(20 + i * 18, 20, 'sprite_tiles', 44)
         .setOrigin(0.5).setDepth(10);
+
       this.health.add(sprite);
       sprite.setScrollFactor(0);
     }
+
   }
 
   update() {
-
     this.updateHealth();
-
     if (my.sprite.player.y > this.sys.game.config.height + 18) {
       this.failed();
       return;
     }
-
     if (cursors.left.isDown) {
       // TODO: have the player accelerate to the left
       my.sprite.player.body.setAccelerationX(-this.ACCELERATION);
@@ -358,8 +313,17 @@ class Platformer extends Phaser.Scene {
       this.jumpCount = 0
     }
     if (my.sprite.player.body.blocked.down && Phaser.Input.Keyboard.JustDown(this.keys.space)) {
-      // TODO: set a Y velocity to have the player "jump" upwards (negative Y direction)
-      my.sprite.player.body.setVelocityY(this.JUMP_VELOCITY);
+
+      // detect player overlap with bounce
+      if (this.bounce.collideWithPlayer) {
+        my.sprite.player.body.setVelocityY(this.JUMP_VELOCITY * 1.2);
+        console.log(this.bounce.collideWithPlayer)
+        this.bounce.collideWithPlayer = false
+        this.bounce.setFrame(108)
+        this.bounce.pushed = false
+      } else {
+        my.sprite.player.body.setVelocityY(this.JUMP_VELOCITY);
+      }
 
       this.jumpCount = 1
     }
