@@ -40,5 +40,6 @@ let config = {
 var cursors;
 const SCALE = 2.0;
 var my = { sprite: {}, text: {} };
+var sounds = {}
 
 const game = new Phaser.Game(config);
