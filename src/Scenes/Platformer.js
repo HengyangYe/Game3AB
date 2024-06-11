@@ -81,6 +81,19 @@ const createFloorGroup = (scene, player, x, y) => {
 
 };
 
+const createSecretLevel = (scene, layer, player) => {
+
+  const [worldX, worldY] = removeTile(layer, 21, 7);
+  const sprite = createSprite(scene, 48, worldX, worldY);
+
+  sprite.body.allowGravity = false
+  sprite.setImmovable(true)
+  scene.physics.add.collider(player, sprite, () => {
+    scene.inSecret = true
+    console.log('collide')
+  })
+}
+
 class Platformer extends Phaser.Scene {
   constructor() {
     super("platformerScene");
@@ -212,7 +225,10 @@ class Platformer extends Phaser.Scene {
     this.enemies.push(littleSquare)
 
     this.enemies.forEach((enemy) => {
-      this.physics.add.overlap(enemy, my.sprite.player, this.shouldFailed.bind(this))
+      this.physics.add.overlap(enemy, my.sprite.player, () => {
+        this.shouldFailed();
+        sounds.enemy.play();
+      })
     });
 
     const collectables = [];
@@ -256,11 +272,22 @@ class Platformer extends Phaser.Scene {
 
     this.health = this.add.group().setDepth(10);
 
+    createSecretLevel(this, this.groundLayer, my.sprite.player);
+
+    this.secretCount = 0
   }
   collect(item, player) {
     const type = item.customType || ''
     if (type in this.collection) {
       this.collection[type]++
+    }
+
+    if (item.customType === 'heart') {
+      sounds.heart.play();
+    } else if (item.customType === 'diamonds') {
+      sounds.diamond.play();
+    } else if (item.customType === 'keys') {
+      sounds.key.play();
     }
 
     if (type === 'diamonds') {
@@ -327,6 +354,7 @@ class Platformer extends Phaser.Scene {
 
     if (cursors.left.isDown) {
       // TODO: have the player accelerate to the left
+      sounds.moving.play();
       my.sprite.player.body.setAccelerationX(-this.ACCELERATION);
 
       my.sprite.player.resetFlip();
@@ -334,6 +362,7 @@ class Platformer extends Phaser.Scene {
 
     } else if (cursors.right.isDown) {
       // TODO: have the player accelerate to the right
+      sounds.moving.play();
       my.sprite.player.body.setAccelerationX(this.ACCELERATION);
 
       my.sprite.player.setFlip(true, false);
@@ -359,10 +388,24 @@ class Platformer extends Phaser.Scene {
     }
     if (my.sprite.player.body.blocked.down && Phaser.Input.Keyboard.JustDown(this.keys.space)) {
       // TODO: set a Y velocity to have the player "jump" upwards (negative Y direction)
+      sounds.jump.play();
       my.sprite.player.body.setVelocityY(this.JUMP_VELOCITY);
 
       this.jumpCount = 1
+
+      if (this.inSecret) {
+        clearTimeout(this.secretTimer);
+        this.secretCount++
+        if (this.secretCount > 3) {
+          this.scene.start('platformerScene3')
+        }
+        this.inSecret = false;
+        this.secretTimer = setTimeout(() => {
+          this.secretCount = 0;
+        }, 2000);
+      }
     }
+
 
     if (my.sprite.player.body.blocked.down && Phaser.Input.Keyboard.JustDown(cursors.down)) {
       my.sprite.player.setScale(2, 1.5)

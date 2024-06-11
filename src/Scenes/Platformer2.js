@@ -168,7 +168,10 @@ class Platformer2 extends Phaser.Scene {
     });
 
     this.enemies.forEach((enemy) => {
-      this.physics.add.overlap(enemy, my.sprite.player, this.shouldFailed.bind(this))
+      this.physics.add.overlap(enemy, my.sprite.player, () => {
+        this.shouldFailed();
+        sounds.enemy.play();
+      })
     });
 
 
@@ -212,6 +215,14 @@ class Platformer2 extends Phaser.Scene {
     const type = item.customType || ''
     if (type in this.collection) {
       this.collection[type]++
+    }
+
+    if (item.customType === 'heart') {
+      sounds.heart.play();
+    } else if (item.customType === 'diamonds') {
+      sounds.diamond.play();
+    } else if (item.customType === 'keys') {
+      sounds.key.play();
     }
 
     if (type === 'diamonds') {
@@ -282,6 +293,7 @@ class Platformer2 extends Phaser.Scene {
     }
     if (cursors.left.isDown) {
       // TODO: have the player accelerate to the left
+      sounds.moving.play();
       my.sprite.player.body.setAccelerationX(-this.ACCELERATION);
 
       my.sprite.player.resetFlip();
@@ -289,6 +301,7 @@ class Platformer2 extends Phaser.Scene {
 
     } else if (cursors.right.isDown) {
       // TODO: have the player accelerate to the right
+      sounds.moving.play();
       my.sprite.player.body.setAccelerationX(this.ACCELERATION);
 
       my.sprite.player.setFlip(true, false);
@@ -314,10 +327,10 @@ class Platformer2 extends Phaser.Scene {
     }
     if (my.sprite.player.body.blocked.down && Phaser.Input.Keyboard.JustDown(this.keys.space)) {
 
+      sounds.jump.play();
       // detect player overlap with bounce
       if (this.bounce.collideWithPlayer) {
         my.sprite.player.body.setVelocityY(this.JUMP_VELOCITY * 1.2);
-        console.log(this.bounce.collideWithPlayer)
         this.bounce.collideWithPlayer = false
         this.bounce.setFrame(108)
         this.bounce.pushed = false

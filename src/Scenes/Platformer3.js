@@ -63,11 +63,11 @@ class Platformer3 extends Phaser.Scene {
     this.physics.add.collider(my.sprite.player, this.background2);
     // bound player on horizontal direction
 
-    this.physics.world.setBounds(0, 0, this.sys.game.config.width, this.sys.game.config.height, true, true, false, false)
+    this.physics.world.setBounds(0, 0, 1440, this.sys.game.config.height, true, true, false, false)
 
-    // this.camera = this.cameras.main;
-    // this.camera.startFollow(my.sprite.player, true, 0.05, 0.05);
-    // this.camera.setBounds(0, 0, 1440, 720)
+    this.camera = this.cameras.main;
+    this.camera.startFollow(my.sprite.player, true, 0.05, 0.05);
+    this.camera.setBounds(0, 0, 1440, 720)
 
     // set up Phaser-provided cursor key input
     cursors = this.input.keyboard.createCursorKeys();
@@ -145,7 +145,10 @@ class Platformer3 extends Phaser.Scene {
     });
 
     this.enemies.forEach((enemy) => {
-      this.physics.add.overlap(enemy, my.sprite.player, this.shouldFailed.bind(this))
+      this.physics.add.overlap(enemy, my.sprite.player, () => {
+        this.shouldFailed();
+        sounds.enemy.play();
+      })
     });
 
     this.wing = this.physics.add.group();
@@ -174,6 +177,15 @@ class Platformer3 extends Phaser.Scene {
 
     this.health = this.add.group().setDepth(10);
 
+    this.particles = this.add.particles(400, 300, 'particle', {
+      speed: { min: -800, max: 800 },
+      angle: { min: 0, max: 360 },
+      scale: { start: 0.5, end: 0 },
+      blendMode: 'ADD',
+      active: true,
+      lifespan: 600,
+      gravityY: 800
+    }).stop();
   }
   success() {
     console.log('success')
@@ -189,6 +201,24 @@ class Platformer3 extends Phaser.Scene {
     const type = item.customType || ''
     if (type in this.collection) {
       this.collection[type]++
+    }
+
+    if (item.customType === 'heart') {
+      sounds.heart.play();
+    } else if (item.customType === 'diamonds' || item.customType === 'hamburger') {
+      sounds.diamond.play();
+    } else if (item.customType === 'keys') {
+      sounds.key.play();
+    }
+
+    if (item.customType === 'hamburger') {
+      console.log(item)
+      const x = item.x;
+      const y = item.y;
+      this.particles.setPosition(x, y).start();
+      this.time.delayedCall(100, () => {
+        this.particles.stop();
+      })
     }
 
     if (type === 'diamonds') {
@@ -270,6 +300,7 @@ class Platformer3 extends Phaser.Scene {
     }
 
     if (cursors.left.isDown) {
+      sounds.moving.play();
       // TODO: have the player accelerate to the left
       my.sprite.player.body.setAccelerationX(-this.ACCELERATION * factor);
 
@@ -278,6 +309,7 @@ class Platformer3 extends Phaser.Scene {
 
     } else if (cursors.right.isDown) {
       // TODO: have the player accelerate to the right
+      sounds.moving.play();
       my.sprite.player.body.setAccelerationX(this.ACCELERATION * factor);
 
       my.sprite.player.setFlip(true, false);
@@ -302,6 +334,7 @@ class Platformer3 extends Phaser.Scene {
       this.jumpCount = 0
     }
     if (my.sprite.player.body.blocked.down && Phaser.Input.Keyboard.JustDown(this.keys.space)) {
+      sounds.jump.play();
       // TODO: set a Y velocity to have the player "jump" upwards (negative Y direction)
       my.sprite.player.body.setVelocityY(this.JUMP_VELOCITY * factor);
 

@@ -13,12 +13,20 @@ class Load extends Phaser.Scene {
     this.load.image("tilemap_tiles", "tilemap_packed.png");                         // Packed tilemap
     this.load.image("tilemap-backgrounds", "tilemap-backgrounds_packed.png");                         // Packed tilemap
     this.load.image("tilemap-food", "tilemap_packed_food.png");                         // Packed tilemap
+    this.load.image('particle', 'yellow.png');
     this.load.spritesheet("sprite_tiles", "tilemap_packed.png", { frameWidth: 18, frameHeight: 18 });
     this.load.spritesheet("sprite_tiles_food", "tilemap_packed_food.png", { frameWidth: 18, frameHeight: 18 });
 
     this.load.tilemapTiledJSON("platformer-level-1", "platformer-level-1.tmj");   // Tilemap in JSON
     this.load.tilemapTiledJSON("platformer-level-2", "3adesign.tmj");   // Tilemap in JSON
     this.load.tilemapTiledJSON("platformer-level-3", "3adesign1.tmj");   // Tilemap in JSON
+
+    this.load.audio('diamondSound', 'audio/impactMetal_medium_001.ogg');
+    this.load.audio('heartSound', 'audio/impactTin_medium_001.ogg');
+    this.load.audio('keySound', 'audio/impactMining_000.ogg');
+    this.load.audio('enemySound', 'audio/impactWood_light_000.ogg');
+    this.load.audio('jumpSound', 'audio/phaserUp7.ogg');
+    this.load.audio('movingSound', 'audio/powerUp1.ogg');
 
   }
 
@@ -111,6 +119,13 @@ class Load extends Phaser.Scene {
       frameRate: 1,
       repeat: -1
     })
+
+    sounds.key = this.sound.add('keySound');
+    sounds.heart = this.sound.add('heartSound');
+    sounds.diamond = this.sound.add('diamondSound');
+    sounds.enemy = this.sound.add('enemySound');
+    sounds.jump = this.sound.add('jumpSound', { delay: 0 });
+    sounds.moving = this.sound.add('movingSound');
 
     // ...and pass to the next Scene
     this.scene.start("platformerScene");
